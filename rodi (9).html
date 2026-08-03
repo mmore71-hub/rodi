@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Rhodes Travel App 🇬🇷</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Rodi 2026">
+  <link rel="apple-touch-icon" href="icon.png">
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    :root {
+      --bg-main: #F4F7F9;
+      --primary-blue: #0066CC;
+      --deep-blue: #003366;
+      --sky-blue: #E0F2FE;
+      --sun-gold: #FFB703;
+      --text-dark: #0F172A;
+      --text-muted: #64748B;
+      --card-bg: #FFFFFF;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --shadow: 0 10px 25px -5px rgba(0, 102, 204, 0.08);
+      --success: #10B981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-dark);
+      padding-bottom: 90px;
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      box-shadow: 0 0 40px rgba(0,0,0,0.05);
+    }
+
+    /* HEADER */
+    header {
+      background: linear-gradient(135deg, var(--deep-blue) 0%, var(--primary-blue) 100%);
+      color: white;
+      padding: 32px 24px 28px 24px;
+      border-bottom-left-radius: 28px;
+      border-bottom-right-radius: 28px;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-badge {
+      background: var(--sun-gold);
+      color: var(--deep-blue);
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      box-shadow: 0 4px 12px rgba(255, 183, 3, 0.4);
+    }
+
+    .brand-title h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .brand-title p {
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
+
+    .weather-widget {
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* CONTENUTO SCHEDE */
+    main {
+      padding: 24px 20px;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* CATEGORY PILLS */
+    .categories {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+      scroll-behavior: smooth;
+    }
+
+    .categories::-webkit-scrollbar { display: none; }
+
+    .pill {
+      background: var(--card-bg);
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+      border: 1px solid #E2E8F0;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pill.active {
+      background: var(--primary-blue);
+      color: white;
+      border-color: var(--primary-blue);
+      box-shadow: 0 4px 10px rgba(0, 102, 204, 0.3);
+    }
+
+    /* CARDS TAPPA */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow);
+      border: 1px solid #F1F5F9;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      transition: transform 0.2s ease;
+    }
+
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .icon-spiagge { background: #E0F2FE; color: #0284C7; }
+    .icon-storia { background: #FEF3C7; color: #D97706; }
+    .icon-taverne { background: #FCE7F3; color: #DB2777; }
+    .icon-parco { background: #DCFCE7; color: #16A34A; }
+    .icon-volo { background: #E0E7FF; color: #4F46E5; }
+
+    .card-details {
+      flex: 1;
+    }
+
+    .card-tag {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--primary-blue);
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin: 2px 0 6px 0;
+    }
+
+    .card-description {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+
+    .card-tip {
+      background: #FFFBEB;
+      border-left: 3px solid var(--sun-gold);
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      color: #78350F;
+      margin-top: 8px;
+      line-height: 1.45;
+    }
+
+    .map-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--primary-blue);
+      text-decoration: none;
+      margin-top: 8px;
+    }
+
+    /* CHECKLIST CUSTOM STYLES */
+    .progress-box {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid #F1F5F9;
+      text-align: center;
+    }
+
+    .progress-title { font-size: 2rem; font-weight: 800; color: var(--primary-blue); }
+    .progress-bar-container { height: 10px; background: #E2E8F0; border-radius: 5px; margin: 10px 0; overflow: hidden; }
+    .progress-bar-fill { height: 100%; background: var(--success); width: 0%; transition: width 0.3s; }
+
+    .cl-group {
+      background: var(--card-bg);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+      border: 1px solid #F1F5F9;
+    }
+
+    .cl-group-header {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--deep-blue);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .cl-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid #F8FAFC;
+      cursor: pointer;
+    }
+    .cl-item:last-child { border-bottom: none; }
+
+    .cl-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary-blue);
+      cursor: pointer;
+    }
+
+    .cl-item span { font-size: 0.92rem; font-weight: 500; }
+    .cl-item.checked span { text-decoration: line-through; color: var(--text-muted); }
+
+    .btn-reset {
+      background: #FEE2E2;
+      color: #EF4444;
+      border: none;
+      width: 100%;
+      padding: 12px;
+      border-radius: var(--radius-md);
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+
+    /* BOTTOM NAV */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 0 16px 0;
+      border-top: 1px solid #E2E8F0;
+      border-top-left-radius: 20px;
+      border-top-right-radius: 20px;
+      z-index: 1000;
+    }
+
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      border: none;
+      background: none;
+      cursor: pointer;
+    }
+
+    .nav-link i {
+      font-size: 1.2rem;
+    }
+
+    .nav-link.active {
+      color: var(--primary-blue);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-top">
+      <div class="brand-logo">
+        <div class="logo-badge">
+          <i class="fa-solid fa-umbrella-beach"></i>
+        </div>
+        <div class="brand-title">
+          <h1>Rhodes Trip 2026</h1>
+          <p>Famiglia (2 Bimbi) 🇬🇷</p>
+        </div>
+      </div>
+      <i class="fa-solid fa-sun" id="headerSunMoon" style="font-size: 1.4rem; color: var(--sun-gold);"></i>
+    </div>
+
+    <div class="weather-widget">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <i class="fa-solid fa-temperature-three-quarters" id="weatherIcon" style="color: var(--sun-gold);"></i>
+        <span id="weatherText"><strong>Rodi:</strong> Agosto</span>
+      </div>
+      <span style="font-size: 0.8rem; opacity: 0.8;" id="weatherTime"></span>
+    </div>
+  </header>
+
+  <main>
+    <!-- SEZIONE 1: MAPPA E DESTINAZIONI -->
+    <div id="tab-mappa" class="tab-content active">
+      <div class="categories">
+        <button class="pill active" onclick="filterCategory('tutti', this)"><i class="fa-solid fa-layer-group"></i> Tutti</button>
+        <button class="pill" onclick="filterCategory('spiagge', this)"><i class="fa-solid fa-water"></i> Spiagge</button>
+        <button class="pill" onclick="filterCategory('storia', this)"><i class="fa-solid fa-landmark"></i> Storia</button>
+        <button class="pill" onclick="filterCategory('svago', this)"><i class="fa-solid fa-child-reaching"></i> Svago & Natura</button>
+      </div>
+
+      <div class="section-header">
+        <div class="section-title">
+          <i class="fa-solid fa-compass" style="color: var(--primary-blue);"></i> Tappe Principali
+        </div>
+      </div>
+
+      <div id="cards-container">
+        <div class="card" data-category="storia">
+          <div class="card-icon icon-storia"><i class="fa-solid fa-castle"></i></div>
+          <div class="card-details">
+            <span class="card-tag">Storia & Cultura</span>
+            <div class="card-title">Città Vecchia & Palazzo</div>
+            <div class="card-description">Fortezza medievale patrimonio UNESCO. Via dei Cavalieri e Palazzo del Gran Maestro — sembra un vero castello da cavalieri!</div>
+            <a class="map-link" href="https://maps.google.com/?q=Palace+Grand+Master+Rhodes" target="_blank"><i class="fa-solid fa-location-dot"></i> Apri Mappa</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="storia">
+          <div class="card-icon icon-storia"><i class="fa-solid fa-landmark"></i></div>
+          <div class="card-details">
+            <span class="card-tag">Storia & Cultura</span>
+            <div class="card-title">Acropoli di Lindos</div>
+            <div class="card-description">Vista spettacolare sulla baia. Salita a piedi o con gli asinelli. Tempio di Atena e villaggio bianco con vicoli e gelaterie.</div>
+            <a class="map-link" href="https://maps.google.com/?q=Acropolis+Lindos+Rhodes" target="_blank"><i class="fa-solid fa-location-dot"></i> Apri Mappa</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="storia">
+          <div class="card-icon icon-storia"><i class="fa-solid fa-monument"></i></div>
+          <div class="card-details">
+            <span class="card-tag">Storia & Cultura</span>
+            <div class="card-title">Terme di Kallithea</div>
+            <div class="card-description">Complesso Art Déco italiano restaurato con baia riparata e piscine naturali tra le rocce. Acque basse perfette per i bambini.</div>
+            <a class="map-link" href="https://maps.google.com/?q=Kallithea+Springs+Rhodes" target="_blank"><i class="fa-solid fa-location-dot"></i> Apri Mappa</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="storia">
+          <div class="card-icon icon-storia"><i class="fa-solid fa-church"></i></div>
+          <div class="card-details">
+            <span class="card-tag">Storia & Cultura</span>
+            <div class="card-title">Filerimos & Kamiros</div>
+            <div class="card-description">Monastero con vista panoramica e pavoni liberi. Kamiros: la "Pompei di Rodi", rovine di un'antica città greca.</div>
+            <a class="map-link" href="https://maps.google.com/?q=Filerimos+Rhodes" target="_blank"><i class="fa-solid fa-location-dot"></i> Apri Mappa</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="spiagge">
+          <div class="card-icon icon-spiagge"><i class="fa-solid fa-umbrella-beach"></i></div>
+          <div class="card-details">
+            <span class="card-tag">⭐ Spiaggia Top</span>
+            <div class="card-title">Tsambika Beach</div>
+            <div class="card-description">Sabbia dorata finissima e fondale bassissimo. La spiaggia numero 1 per le famiglie. Sport acquatici, banana boat, jet ski.</div>
+            <a class="map-link" href="https://maps.google.com/?q=Tsambika+Beach+Rhodes" target="_blank"><i class="fa-solid fa-location-dot"></i> Apri Mappa</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="spiagge">
+          <div class="card-icon icon-spiagge"><i class="fa-solid fa-anchor"></i></div>
+          <div class="card-details">
+            <span class="card-tag">⭐ Spiaggia Scenica</span>
+            <div class="card-title">Baia di San Paolo (Lindos)</div>
+            <div class="card-description">Acqua turchese, poco profonda, incredibilmente scenica. Una delle baie più belle del Mediterraneo, sotto l'Acropoli.</div>
+            <a class="map-link" href="https://maps.google.com/?q=St+Paul+Bay+Lindos" target="_blank"><i class="fa-solid fa-location-dot"></i> Apri Mappa</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="spiagge">
+          <div class="card-icon icon-spiagge"><i class="fa-solid fa-fish"></i></div>
+          <div class="card-details">
+            <span class="card-tag">Spiaggia Tranquilla</span>
+            <div class="card-title">Stegna Beach</div>
+            <div class="card-description">Villaggio di pescatori con sabbia fine e taverne di pesce direttamente sulla spiaggia. Stegna Kozas è tra le migliori.</div>
+            <a class="map-link" href="https://maps.google.com/?q=Stegna+Beach+Rhodes" target="_blank"><i class="fa-solid fa-location-dot"></i> Apri Mappa</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="spiagge">
+          <div class="card-icon icon-spiagge"><i class="fa-solid fa-water"></i></div>
+          <div class="card-details">
+            <span class="card-tag">⭐ Spiaggia Avventura</span>
+            <div class="card-title">Agathi Beach</div>
+            <div class="card-description">Baia riparata con piscine naturali tra le rocce. Castello di Feraklos sulla collina. Mare limpido e trasparente.</div>
+            <a class="map-link" href="https://maps.google.com/?q=Agia+Agathi+Beach+Rhodes" target="_blank"><i class="fa-solid fa-location-dot"></i> Apri Mappa</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="spiagge">
+          <div class="card-icon icon-spiagge"><i class="fa-solid fa-umbrella-beach"></i></div>
+          <div class="card-details">
+            <span class="card-tag">Spiaggia Attrezzata</span>
+            <div class="card-title">Faliraki Beach</div>
+            <div class="card-description">Sabbia fine, acque calme, tutti i servizi. Pedalò, banana boat, sport acquatici. La più attrezzata dell'isola.</div>
+            <a class="map-link" href="https://maps.google.com/?q=Faliraki+Beach+Rhodes" target="_blank"><i class="fa-solid fa-location-dot"></i> Apri Mappa</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="spiagge">
+          <div class="card-icon icon-spiagge"><i class="fa-solid fa-hot-tub-person"></i></div>
+          <div class="card-details">
+            <span class="card-tag">Spiaggia Nascosta</span>
+            <div class="card-title">Glystra Beach</div>
+            <div class="card-description">Baia protetta, sabbia e acque calde. Poco affollata perché più a sud (~55 km da Rodi città). Anche i locali la preferiscono!</div>
+            <a class="map-link" href="https://maps.google.com/?q=Glystra+Beach+Rhodes" target="_blank"><i class="fa-solid fa-location-dot"></i> Apri Mappa</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="svago">
+          <div class="card-icon icon-parco"><i class="fa-solid fa-water-ladder"></i></div>
+          <div class="card-details">
+            <span class="card-tag">Divertimento</span>
+            <div class="card-title">WaterPark Faliraki</div>
+            <div class="card-description">Uno dei parchi acquatici più grandi d'Europa. Scivoli, piscina a onde, fiume lento e aree bambini. Navetta gratuita.</div>
+            <a class="map-link" href="https://maps.google.com/?q=WaterPark+Faliraki" target="_blank"><i class="fa-solid fa-location-dot"></i> Apri Mappa</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="svago">
+          <div class="card-icon icon-parco"><i class="fa-solid fa-locust"></i></div>
+          <div class="card-details">
+            <span class="card-tag">Natura</span>
+            <div class="card-title">Valle delle Farfalle</div>
+            <div class="card-description">Sentiero ombreggiato nel bosco con ponticelli e cascatelle. Migliaia di farfalle Callimorpha da giugno a settembre.</div>
+            <a class="map-link" href="https://maps.google.com/?q=Valley+of+the+Butterflies+Rhodes" target="_blank"><i class="fa-solid fa-location-dot"></i> Apri Mappa</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="svago">
+          <div class="card-icon icon-parco"><i class="fa-solid fa-mountain-sun"></i></div>
+          <div class="card-details">
+            <span class="card-tag">Natura & Avventura</span>
+            <div class="card-title">Epta Piges — 7 Sorgenti</div>
+            <div class="card-description">Oasi fresca nel bosco di pini. Tunnel di 180 m al buio con acqua alle caviglie — i bambini lo adoreranno! Portate una torcia.</div>
+            <a class="map-link" href="https://maps.google.com/?q=Seven+Springs+Rhodes" target="_blank"><i class="fa-solid fa-location-dot"></i> Apri Mappa</a>
+          </div>
+        </div>
+
+        <div class="card" data-category="svago">
+          <div class="card-icon icon-spiagge"><i class="fa-solid fa-ferry"></i></div>
+          <div class="card-details">
+            <span class="card-tag">Escursione</span>
+            <div class="card-title">Isola di Symi</div>
+            <div class="card-description">Fast boat ~1 ora. Il porto più fotogenico della Grecia: case neoclassiche color pastello. Pesce fresco e bagno a St. George Bay.</div>
+            <a class="map-link" href="https://maps.google.com/?q=Symi+Greece" target="_blank"><i class="fa-solid fa-location-dot"></i> Apri Mappa</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEZIONE 2: PROGRAMMA DI GIORNO IN GIORNO -->
+    <div id="tab-programma" class="tab-content">
+      <div class="categories" id="dayPills">
+        <button class="pill active" onclick="showDay(1, this)">G1</button>
+        <button class="pill" onclick="showDay(2, this)">G2</button>
+        <button class="pill" onclick="showDay(3, this)">G3</button>
+        <button class="pill" onclick="showDay(4, this)">G4</button>
+        <button class="pill" onclick="showDay(5, this)">G5</button>
+        <button class="pill" onclick="showDay(6, this)">G6</button>
+        <button class="pill" onclick="showDay(7, this)">G7</button>
+        <button class="pill" onclick="showDay(8, this)">G8</button>
+        <button class="pill" onclick="showDay(9, this)">G9</button>
+        <button class="pill" onclick="showDay(10, this)">G10</button>
+        <button class="pill" onclick="showDay(11, this)">G11</button>
+      </div>
+
+      <!-- GIORNI DIVERSI -->
+      <div id="day-contents">
+        <!-- DAY 1 -->
+        <div class="day-box" id="day-1">
+          <div class="section-title" style="margin-bottom:12px;"><i class="fa-solid fa-plane-arrival" style="color:var(--primary-blue)"></i> Giorno 1: Arrivo</div>
+          <div class="card">
+            <div class="card-icon icon-volo"><i class="fa-solid fa-plane"></i></div>
+            <div class="card-details">
+              <div class="card-title">Arrivo & Sistemazione</div>
+              <div class="card-description">Arrivo in aeroporto (RHO), ritiro dell'auto a noleggio e check-in nella struttura. Pomeriggio dedicato al relax in piscina/spiaggia vicina.</div>
+              <div class="card-tip">💡 Consigliata base sulla costa Est per facilitare tutti gli spostamenti brevi con i bambini.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DAY 2 -->
+        <div class="day-box" id="day-2" style="display:none;">
+          <div class="section-title" style="margin-bottom:12px;"><i class="fa-solid fa-castle" style="color:var(--primary-blue)"></i> Giorno 2: Rodi Città</div>
+          <div class="card">
+            <div class="card-icon icon-storia"><i class="fa-solid fa-chess-rook"></i></div>
+            <div class="card-details">
+              <div class="card-title">Mattina: Città Vecchia</div>
+              <div class="card-description">Esplorazione del Castello e della Via dei Cavalieri. Visita al Palazzo del Gran Maestro.</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-icon icon-svago"><i class="fa-solid fa-fish"></i></div>
+            <div class="card-details">
+              <div class="card-title">Pomeriggio: Porto Mandraki & Acquario</div>
+              <div class="card-description">Passeggiata tra le statue dei cervi al porto e visita all'Acquario storico di Rodi.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DAY 3 -->
+        <div class="day-box" id="day-3" style="display:none;">
+          <div class="section-title" style="margin-bottom:12px;"><i class="fa-solid fa-water" style="color:var(--primary-blue)"></i> Giorno 3: Kallithea & Faliraki</div>
+          <div class="card">
+            <div class="card-icon icon-storia"><i class="fa-solid fa-monument"></i></div>
+            <div class="card-details">
+              <div class="card-title">Mattina: Terme di Kallithea</div>
+              <div class="card-description">Sito monumentale con baia protetta e acque limpidissime, ideale per il primo bagno.</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-icon icon-spiagge"><i class="fa-solid fa-umbrella-beach"></i></div>
+            <div class="card-details">
+              <div class="card-title">Pomeriggio: Faliraki Beach</div>
+              <div class="card-description">Spiaggia di sabbia attrezzata, ottima per far giocare i bambini in sicurezza.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DAY 4 -->
+        <div class="day-box" id="day-4" style="display:none;">
+          <div class="section-title" style="margin-bottom:12px;"><i class="fa-solid fa-water-ladder" style="color:var(--primary-blue)"></i> Giorno 4: WaterPark</div>
+          <div class="card">
+            <div class="card-icon icon-parco"><i class="fa-solid fa-child"></i></div>
+            <div class="card-details">
+              <div class="card-title">Intera Giornata: WaterPark Faliraki</div>
+              <div class="card-description">Divertimento sfrenato tra piscine a onde, scivoli tematici e area bimbi.</div>
+              <div class="card-tip">⚠️ Alcuni scivoli alti richiedono altezza minima (120 cm).</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DAY 5 -->
+        <div class="day-box" id="day-5" style="display:none;">
+          <div class="section-title" style="margin-bottom:12px;"><i class="fa-solid fa-landmark" style="color:var(--primary-blue)"></i> Giorno 5: Lindos</div>
+          <div class="card">
+            <div class="card-icon icon-storia"><i class="fa-solid fa-monument"></i></div>
+            <div class="card-details">
+              <div class="card-title">Mattina Presto: Acropoli di Lindos</div>
+              <div class="card-description">Visita alla famosa Acropoli e alle casette bianche. Andare presto per evitare il caldo.</div>
+              <div class="card-tip">💡 Evitare passeggini: meglio il marsupio o passeggiata a piedi.</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-icon icon-spiagge"><i class="fa-solid fa-anchor"></i></div>
+            <div class="card-details">
+              <div class="card-title">Pomeriggio: Baia di San Paolo</div>
+              <div class="card-description">Incredibile insenatura naturale riparata con vista panoramica sul retro dell'Acropoli.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DAY 6 -->
+        <div class="day-box" id="day-6" style="display:none;">
+          <div class="section-title" style="margin-bottom:12px;"><i class="fa-solid fa-tree" style="color:var(--primary-blue)"></i> Giorno 6: Natura & Tsambika</div>
+          <div class="card">
+            <div class="card-icon icon-parco"><i class="fa-solid fa-mountain-sun"></i></div>
+            <div class="card-details">
+              <div class="card-title">Mattina: 7 Sorgenti (Epta Piges)</div>
+              <div class="card-description">Oasi fresca nel bosco di pini dove sette ruscelli confluiscono in un laghetto. Attraversamento del tunnel al buio (~180 m, acqua alle caviglie) — i bambini lo adoreranno!</div>
+              <div class="card-tip">🔦 Portate una torcia! Il tunnel è buio e l'acqua arriva alle caviglie. C'è anche un parco giochi e taverna ombreggiata.</div>
+              <a class="map-link" href="https://maps.google.com/?q=Seven+Springs+Rhodes" target="_blank"><i class="fa-solid fa-location-dot"></i> Apri Mappa</a>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-icon icon-spiagge"><i class="fa-solid fa-sun"></i></div>
+            <div class="card-details">
+              <div class="card-title">Pomeriggio: Tsambika Beach</div>
+              <div class="card-description">Pomeriggio di relax sulla sabbia calda con fondale basso e giochi acquatici.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DAY 7 -->
+        <div class="day-box" id="day-7" style="display:none;">
+          <div class="section-title" style="margin-bottom:12px;"><i class="fa-solid fa-locust" style="color:var(--primary-blue)"></i> Giorno 7: Farfalle & Filerimos</div>
+          <div class="card">
+            <div class="card-icon icon-parco"><i class="fa-solid fa-leaf"></i></div>
+            <div class="card-details">
+              <div class="card-title">Mattina: Valle delle Farfalle</div>
+              <div class="card-description">Percorso fresco nei boschi circondati dalla specie di farfalle Panaxia Quadripunctaria.</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-icon icon-storia"><i class="fa-solid fa-feather"></i></div>
+            <div class="card-details">
+              <div class="card-title">Pomeriggio: Filerimos & Pavoni</div>
+              <div class="card-description">Visita alla croce gigante di Filerimos con decine di pavoni liberi tra gli alberi.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DAY 8 -->
+        <div class="day-box" id="day-8" style="display:none;">
+          <div class="section-title" style="margin-bottom:12px;"><i class="fa-solid fa-ship" style="color:var(--primary-blue)"></i> Giorno 8: Isola di Symi</div>
+          <div class="card">
+            <div class="card-icon icon-svago"><i class="fa-solid fa-ferry"></i></div>
+            <div class="card-details">
+              <div class="card-title">Gita in Barca a Symi</div>
+              <div class="card-description">Fast boat dal porto di Mandraki (~1 ora). Arrivo nel porto più fotogenico della Grecia: case neoclassiche color pastello. Tempo libero per passeggiare, pranzare pesce fresco e bagno a St. George Bay.</div>
+              <div class="card-tip">💡 Prenotate in anticipo! In agosto si esaurisce. ~€40/adulto, ~€20/bambino. I bambini adoreranno la barca!</div>
+              <a class="map-link" href="https://maps.google.com/?q=Symi+Greece" target="_blank"><i class="fa-solid fa-location-dot"></i> Apri Mappa</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- DAY 9 -->
+        <div class="day-box" id="day-9" style="display:none;">
+          <div class="section-title" style="margin-bottom:12px;"><i class="fa-solid fa-umbrella-beach" style="color:var(--primary-blue)"></i> Giorno 9: Stegna & Agathi</div>
+          <div class="card">
+            <div class="card-icon icon-spiagge"><i class="fa-solid fa-fish"></i></div>
+            <div class="card-details">
+              <div class="card-title">Mattina: Stegna Beach</div>
+              <div class="card-description">Villaggio di pescatori tranquillo con sabbia fine e acque cristalline. Taverne di pesce direttamente sulla spiaggia — Stegna Kozas è tra le migliori dell'isola.</div>
+              <a class="map-link" href="https://maps.google.com/?q=Stegna+Beach+Rhodes" target="_blank"><i class="fa-solid fa-location-dot"></i> Apri Mappa</a>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-icon icon-spiagge"><i class="fa-solid fa-water"></i></div>
+            <div class="card-details">
+              <div class="card-title">Pomeriggio: Agathi Beach</div>
+              <div class="card-description">Piccola spiaggia dorata riparata dai venti. Piscine naturali tra le rocce perfette per i bimbi! Se hanno energia, breve camminata al Castello di Feraklos sulla collina.</div>
+              <div class="card-tip">⚠️ NON seguire Google Maps per arrivarci — porta su una sterrata. Seguite i cartelli stradali "Agathi Beach".</div>
+              <a class="map-link" href="https://maps.google.com/?q=Agia+Agathi+Beach+Rhodes" target="_blank"><i class="fa-solid fa-location-dot"></i> Apri Mappa</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- DAY 10 -->
+        <div class="day-box" id="day-10" style="display:none;">
+          <div class="section-title" style="margin-bottom:12px;"><i class="fa-solid fa-bed" style="color:var(--primary-blue)"></i> Giorno 10: Relax & Archangelos</div>
+          <div class="card">
+            <div class="card-icon icon-storia"><i class="fa-solid fa-church"></i></div>
+            <div class="card-details">
+              <div class="card-title">Mattina: Villaggio di Archangelos</div>
+              <div class="card-description">Casette bianche, Chiesa dell'Arcangelo Michele, artigiani di ceramica e stivali in pelle. Un villaggio autentico lontano dal turismo.</div>
+              <a class="map-link" href="https://maps.google.com/?q=Archangelos+Rhodes" target="_blank"><i class="fa-solid fa-location-dot"></i> Apri Mappa</a>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-icon icon-spiagge"><i class="fa-solid fa-hot-tub-person"></i></div>
+            <div class="card-details">
+              <div class="card-title">Pomeriggio: Glystra Beach o Relax</div>
+              <div class="card-description">Baia protetta con sabbia e acque basse, poco affollata (~55 km a sud). Alternativa: giornata di puro relax in piscina — dopo 9 giorni intensi ci sta! 😊</div>
+              <a class="map-link" href="https://maps.google.com/?q=Glystra+Beach+Rhodes" target="_blank"><i class="fa-solid fa-location-dot"></i> Apri Mappa</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- DAY 11 -->
+        <div class="day-box" id="day-11" style="display:none;">
+          <div class="section-title" style="margin-bottom:12px;"><i class="fa-solid fa-plane-departure" style="color:var(--primary-blue)"></i> Giorno 11: Rientro</div>
+          <div class="card">
+            <div class="card-icon icon-volo"><i class="fa-solid fa-suitcase-rolling"></i></div>
+            <div class="card-details">
+              <div class="card-title">Ultimo Bagno & Partenza</div>
+              <div class="card-description">Ultimo tuffo in piscina o spiaggia dell'hotel. Souvenir dell'ultimo minuto: olio d'oliva, miele, sandali in pelle, ceramiche artigianali.</div>
+              <div class="card-tip">💡 L'aeroporto Diagoras è piccolo — 1.5 ore prima bastano. Riconsegna auto nel parcheggio di fronte al terminal.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEZIONE 3: INFO & INFO UTILI -->
+    <div id="tab-preferiti" class="tab-content">
+      <div class="section-title" style="margin-bottom:15px;">
+        <i class="fa-solid fa-circle-info" style="color: var(--primary-blue);"></i> Info Utili per Famiglie
+      </div>
+
+      <div class="card" style="flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="card-icon icon-spiagge"><i class="fa-solid fa-ranking-star"></i></div>
+          <div class="card-title">Classifica Spiagge per Famiglie</div>
+        </div>
+        <div class="card-description">
+          ⭐ <strong>Tsambika</strong> — la più bella in assoluto<br>
+          ⭐ <strong>St. Paul's Bay</strong> — la più scenica<br>
+          ⭐ <strong>Agathi</strong> — la più avventurosa per i bimbi<br>
+          • <strong>Stegna</strong> — la più tranquilla<br>
+          • <strong>Glystra</strong> — la meno turistica<br>
+          • <strong>Faliraki</strong> — la più attrezzata
+        </div>
+      </div>
+
+      <div class="card" style="flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="card-icon icon-taverne"><i class="fa-solid fa-utensils"></i></div>
+          <div class="card-title">Dove Mangiare</div>
+        </div>
+        <div class="card-description">
+          • <strong>Stegna:</strong> Stegna Kozas (pesce top)<br>
+          • <strong>Lindos:</strong> taverne con vista sui tetti bianchi<br>
+          • <strong>Archangelos:</strong> taverna sopra la cave<br>
+          • I bambini greci cenano tardi — nessun problema alle 21!
+        </div>
+      </div>
+
+      <div class="card" style="flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="card-icon icon-storia"><i class="fa-solid fa-clock"></i></div>
+          <div class="card-title">Ritmo della Giornata</div>
+        </div>
+        <div class="card-description">
+          • Visite culturali al mattino presto (prima delle 10)<br>
+          • Spiaggia dal primo pomeriggio in poi<br>
+          • Evitare il sole diretto 12:00–16:00<br>
+          • Cena tardi come i greci: 20:00–21:00<br>
+          • Prevedete giorni "vuoti" per recuperare energie
+        </div>
+      </div>
+
+      <div class="card" style="flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="card-icon icon-volo"><i class="fa-solid fa-car"></i></div>
+          <div class="card-title">Auto a Noleggio</div>
+        </div>
+        <div class="card-description">
+          Indispensabile con i bambini. L'isola è lunga ~80 km, strade costa est ottime. Prenotate in anticipo per agosto — i prezzi salgono molto. Seggiolino auto: verificate con il noleggio se è incluso o portatene uno.
+        </div>
+      </div>
+
+      <div class="card" style="flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="card-icon icon-storia"><i class="fa-solid fa-kit-medical"></i></div>
+          <div class="card-title">Consigli Pratici</div>
+        </div>
+        <div class="card-description">
+          • <strong>Scarpe da scoglio:</strong> indispensabili per Kallithea e Anthony Quinn Bay<br>
+          • <strong>Lindos:</strong> NO passeggino (scale), meglio carrier/marsupio<br>
+          • <strong>Torcia:</strong> per il tunnel delle 7 Sorgenti<br>
+          • <strong>Contanti €:</strong> taverne piccole non accettano carta<br>
+          • <strong>Prese:</strong> Grecia = tipo C/F come Italia ✅<br>
+          • <strong>Supermercati:</strong> troverete omogeneizzati e pannolini facilmente
+        </div>
+      </div>
+    </div>
+
+    <!-- SEZIONE 4: CHECKLIST VALIGIA -->
+    <div id="tab-valigia" class="tab-content">
+      <div class="section-title" style="margin-bottom:15px;">
+        <i class="fa-solid fa-list-check" style="color: var(--primary-blue);"></i> Checklist Partenza
+      </div>
+
+      <div class="progress-box">
+        <div class="progress-title" id="clPercent">0%</div>
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="clBar"></div>
+        </div>
+        <div style="font-size:0.8rem; color:var(--text-muted);" id="clLabel">0 di 0 pronti</div>
+      </div>
+
+      <!-- Documenti -->
+      <div class="cl-group">
+        <div class="cl-group-header">📄 Documenti & Prenotazioni</div>
+        <div class="cl-item" data-key="d1" onclick="toggleCheck(this)"><input type="checkbox"> <span>Carta d'identità / passaporto adulti</span></div>
+        <div class="cl-item" data-key="d2" onclick="toggleCheck(this)"><input type="checkbox"> <span>Carta d'identità bambini (valida per espatrio!)</span></div>
+        <div class="cl-item" data-key="d3" onclick="toggleCheck(this)"><input type="checkbox"> <span>Tessere Sanitarie Europee (TEAM) × 4</span></div>
+        <div class="cl-item" data-key="d4" onclick="toggleCheck(this)"><input type="checkbox"> <span>Patente di guida</span></div>
+        <div class="cl-item" data-key="d5" onclick="toggleCheck(this)"><input type="checkbox"> <span>Conferma prenotazione volo</span></div>
+        <div class="cl-item" data-key="d6" onclick="toggleCheck(this)"><input type="checkbox"> <span>Conferma prenotazione hotel</span></div>
+        <div class="cl-item" data-key="d7" onclick="toggleCheck(this)"><input type="checkbox"> <span>Conferma noleggio auto + voucher</span></div>
+        <div class="cl-item" data-key="d8" onclick="toggleCheck(this)"><input type="checkbox"> <span>Assicurazione viaggio (se stipulata)</span></div>
+      </div>
+
+      <!-- Elettronica -->
+      <div class="cl-group">
+        <div class="cl-group-header">🔌 Elettronica</div>
+        <div class="cl-item" data-key="t1" onclick="toggleCheck(this)"><input type="checkbox"> <span>Caricatore iPhone + cavo</span></div>
+        <div class="cl-item" data-key="t2" onclick="toggleCheck(this)"><input type="checkbox"> <span>Caricatore Apple Watch</span></div>
+        <div class="cl-item" data-key="t3" onclick="toggleCheck(this)"><input type="checkbox"> <span>Power bank</span></div>
+        <div class="cl-item" data-key="t4" onclick="toggleCheck(this)"><input type="checkbox"> <span>Cuffie / AirPods</span></div>
+        <div class="cl-item" data-key="t5" onclick="toggleCheck(this)"><input type="checkbox"> <span>Tablet / iPad bambini (+ caricatore)</span></div>
+      </div>
+
+      <!-- Spiaggia & Mare -->
+      <div class="cl-group">
+        <div class="cl-group-header">🏖️ Spiaggia & Mare</div>
+        <div class="cl-item" data-key="m1" onclick="toggleCheck(this)"><input type="checkbox"> <span>Crema solare SPF 50+ bambini</span></div>
+        <div class="cl-item" data-key="m2" onclick="toggleCheck(this)"><input type="checkbox"> <span>Crema solare adulti</span></div>
+        <div class="cl-item" data-key="m3" onclick="toggleCheck(this)"><input type="checkbox"> <span>Doposole / Gel Aloe vera</span></div>
+        <div class="cl-item" data-key="m4" onclick="toggleCheck(this)"><input type="checkbox"> <span>Scarpe da scoglio × 4</span></div>
+        <div class="cl-item" data-key="m5" onclick="toggleCheck(this)"><input type="checkbox"> <span>Maschera + boccaglio snorkeling</span></div>
+        <div class="cl-item" data-key="m6" onclick="toggleCheck(this)"><input type="checkbox"> <span>Costumi da bagno (almeno 2 a testa)</span></div>
+        <div class="cl-item" data-key="m7" onclick="toggleCheck(this)"><input type="checkbox"> <span>Magliette UV bambini</span></div>
+        <div class="cl-item" data-key="m8" onclick="toggleCheck(this)"><input type="checkbox"> <span>Cappellini anti-UV × 4</span></div>
+        <div class="cl-item" data-key="m9" onclick="toggleCheck(this)"><input type="checkbox"> <span>Teli mare</span></div>
+        <div class="cl-item" data-key="m10" onclick="toggleCheck(this)"><input type="checkbox"> <span>Occhiali da sole (anche bambini)</span></div>
+        <div class="cl-item" data-key="m11" onclick="toggleCheck(this)"><input type="checkbox"> <span>Braccioli / salvagente bambini</span></div>
+        <div class="cl-item" data-key="m12" onclick="toggleCheck(this)"><input type="checkbox"> <span>Zainetto frigo / borsa termica</span></div>
+      </div>
+
+      <!-- Salute -->
+      <div class="cl-group">
+        <div class="cl-group-header">💊 Salute & Igiene</div>
+        <div class="cl-item" data-key="s1" onclick="toggleCheck(this)"><input type="checkbox"> <span>Farmaci personali / ricorrenti</span></div>
+        <div class="cl-item" data-key="s2" onclick="toggleCheck(this)"><input type="checkbox"> <span>Tachipirina bambini (sciroppo + supposte)</span></div>
+        <div class="cl-item" data-key="s3" onclick="toggleCheck(this)"><input type="checkbox"> <span>Cerotti, disinfettante, garze</span></div>
+        <div class="cl-item" data-key="s4" onclick="toggleCheck(this)"><input type="checkbox"> <span>Antistaminico (punture insetti)</span></div>
+        <div class="cl-item" data-key="s5" onclick="toggleCheck(this)"><input type="checkbox"> <span>Autan / repellente zanzare</span></div>
+        <div class="cl-item" data-key="s6" onclick="toggleCheck(this)"><input type="checkbox"> <span>Fermenti lattici / Imodium</span></div>
+        <div class="cl-item" data-key="s7" onclick="toggleCheck(this)"><input type="checkbox"> <span>Dentifricio + spazzolini</span></div>
+      </div>
+
+      <!-- Abbigliamento -->
+      <div class="cl-group">
+        <div class="cl-group-header">👕 Abbigliamento</div>
+        <div class="cl-item" data-key="v1" onclick="toggleCheck(this)"><input type="checkbox"> <span>T-shirt, canottiere, pantaloncini</span></div>
+        <div class="cl-item" data-key="v2" onclick="toggleCheck(this)"><input type="checkbox"> <span>Felpa leggera / giacca vento (sere + barca)</span></div>
+        <div class="cl-item" data-key="v3" onclick="toggleCheck(this)"><input type="checkbox"> <span>Sandali comodi per camminare</span></div>
+        <div class="cl-item" data-key="v4" onclick="toggleCheck(this)"><input type="checkbox"> <span>Scarpe da ginnastica (Lindos, sentieri)</span></div>
+        <div class="cl-item" data-key="v5" onclick="toggleCheck(this)"><input type="checkbox"> <span>Infradito</span></div>
+        <div class="cl-item" data-key="v6" onclick="toggleCheck(this)"><input type="checkbox"> <span>Un outfit più carino per cene fuori</span></div>
+        <div class="cl-item" data-key="v7" onclick="toggleCheck(this)"><input type="checkbox"> <span>Pigiami bambini</span></div>
+        <div class="cl-item" data-key="v8" onclick="toggleCheck(this)"><input type="checkbox"> <span>Intimo sufficiente per 11 giorni</span></div>
+      </div>
+
+      <!-- Per i bambini -->
+      <div class="cl-group">
+        <div class="cl-group-header">🧒 Per i Bambini</div>
+        <div class="cl-item" data-key="k1" onclick="toggleCheck(this)"><input type="checkbox"> <span>Giochi / carte per ristorante e viaggio</span></div>
+        <div class="cl-item" data-key="k2" onclick="toggleCheck(this)"><input type="checkbox"> <span>Libri / album da colorare</span></div>
+        <div class="cl-item" data-key="k3" onclick="toggleCheck(this)"><input type="checkbox"> <span>Peluche / pupazzo preferito</span></div>
+        <div class="cl-item" data-key="k4" onclick="toggleCheck(this)"><input type="checkbox"> <span>Snack per il viaggio e le escursioni</span></div>
+        <div class="cl-item" data-key="k5" onclick="toggleCheck(this)"><input type="checkbox"> <span>Borracce riutilizzabili × 4</span></div>
+        <div class="cl-item" data-key="k6" onclick="toggleCheck(this)"><input type="checkbox"> <span>Secchiello e palette (spiaggia)</span></div>
+      </div>
+
+      <!-- Varie -->
+      <div class="cl-group">
+        <div class="cl-group-header">🎒 Varie & Utili</div>
+        <div class="cl-item" data-key="x1" onclick="toggleCheck(this)"><input type="checkbox"> <span>Torcia / frontale (tunnel 7 Sorgenti!)</span></div>
+        <div class="cl-item" data-key="x2" onclick="toggleCheck(this)"><input type="checkbox"> <span>Zaino leggero per escursioni</span></div>
+        <div class="cl-item" data-key="x3" onclick="toggleCheck(this)"><input type="checkbox"> <span>Marsupio / carrier (al posto del passeggino)</span></div>
+        <div class="cl-item" data-key="x4" onclick="toggleCheck(this)"><input type="checkbox"> <span>Sacchetti impermeabili per telefono</span></div>
+        <div class="cl-item" data-key="x5" onclick="toggleCheck(this)"><input type="checkbox"> <span>Contanti (€) — taverne piccole non accettano carta</span></div>
+        <div class="cl-item" data-key="x6" onclick="toggleCheck(this)"><input type="checkbox"> <span>Busta per biancheria sporca</span></div>
+        <div class="cl-item" data-key="x7" onclick="toggleCheck(this)"><input type="checkbox"> <span>Seggiolino auto bambini (verificare noleggio)</span></div>
+      </div>
+
+      <button class="btn-reset" onclick="resetChecklist()">Ripristina Checklist</button>
+    </div>
+  </main>
+
+  <!-- BOTTOM NAV BAR -->
+  <nav class="bottom-nav">
+    <button class="nav-link active" onclick="switchTab('tab-mappa', this)">
+      <i class="fa-solid fa-map-location-dot"></i>
+      <span>Tappe</span>
+    </button>
+    <button class="nav-link" onclick="switchTab('tab-programma', this)">
+      <i class="fa-solid fa-calendar-day"></i>
+      <span>Programma</span>
+    </button>
+    <button class="nav-link" onclick="switchTab('tab-preferiti', this)">
+      <i class="fa-solid fa-circle-info"></i>
+      <span>Info</span>
+    </button>
+    <button class="nav-link" onclick="switchTab('tab-valigia', this)">
+      <i class="fa-solid fa-list-check"></i>
+      <span>Valigia</span>
+    </button>
+  </nav>
+
+  <script>
+    // ===== FIREBASE =====
+    const firebaseConfig = {
+      apiKey: "AIzaSyCX5h62pNt0qUuav5ez3Mbj_E7GCNaEZP4",
+      authDomain: "dieta-spesa.firebaseapp.com",
+      databaseURL: "https://dieta-spesa-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "dieta-spesa",
+      storageBucket: "dieta-spesa.firebasestorage.app",
+      messagingSenderId: "135438105741",
+      appId: "1:135438105741:web:2defbc93bfd955750b76c4"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const rodiRef = db.ref('rodi');
+
+    // Cambia scheda principale
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    // Filtra categorie tappe
+    function filterCategory(category, btn) {
+      document.querySelectorAll('#tab-mappa .pill').forEach(pill => pill.classList.remove('active'));
+      btn.classList.add('active');
+      const cards = document.querySelectorAll('#cards-container .card');
+      cards.forEach(card => {
+        if (category === 'tutti' || card.getAttribute('data-category') === category) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    // Mostra giorno programma
+    function showDay(dayNum, btn) {
+      document.querySelectorAll('#dayPills .pill').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.day-box').forEach(box => box.style.display = 'none');
+      document.getElementById('day-' + dayNum).style.display = 'block';
+    }
+
+    // ===== CHECKLIST con Firebase =====
+    function toggleCheck(el) {
+      const chk = el.querySelector('input[type="checkbox"]');
+      chk.checked = !chk.checked;
+      el.classList.toggle('checked', chk.checked);
+      const key = el.dataset.key;
+      if (key) {
+        rodiRef.child(key).set(chk.checked);
+      }
+      updateStats();
+    }
+
+    function updateStats() {
+      const items = document.querySelectorAll('#tab-valigia .cl-item');
+      const checked = document.querySelectorAll('#tab-valigia .cl-item.checked');
+      const total = items.length;
+      const count = checked.length;
+      const pct = total ? Math.round((count / total) * 100) : 0;
+      document.getElementById('clPercent').innerText = pct + '%';
+      document.getElementById('clBar').style.width = pct + '%';
+      document.getElementById('clLabel').innerText = count + ' di ' + total + ' completati';
+    }
+
+    function resetChecklist() {
+      if (confirm("Vuoi azzerare tutta la checklist?")) {
+        rodiRef.remove();
+        document.querySelectorAll('#tab-valigia .cl-item').forEach(item => {
+          item.classList.remove('checked');
+          item.querySelector('input[type="checkbox"]').checked = false;
+        });
+        updateStats();
+      }
+    }
+
+    // Firebase listener — sync in real time
+    rodiRef.on('value', snap => {
+      const data = snap.val() || {};
+      document.querySelectorAll('#tab-valigia .cl-item').forEach(item => {
+        const key = item.dataset.key;
+        if (key) {
+          const chk = item.querySelector('input[type="checkbox"]');
+          if (data[key]) {
+            chk.checked = true;
+            item.classList.add('checked');
+          } else {
+            chk.checked = false;
+            item.classList.remove('checked');
+          }
+        }
+      });
+      updateStats();
+    });
+
+    // Initial stats
+    updateStats();
+
+    // ===== WEATHER WIDGET (based on Rhodes local time) =====
+    function updateWeather() {
+      // Rhodes = UTC+3 (EEST in summer)
+      const now = new Date();
+      const rhodesOffset = 3;
+      const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+      const rhodesTime = new Date(utc + rhodesOffset * 3600000);
+      const h = rhodesTime.getHours();
+      const m = rhodesTime.getMinutes();
+      const timeStr = h.toString().padStart(2,'0') + ':' + m.toString().padStart(2,'0');
+      
+      const isDay = h >= 6 && h < 21;
+      const headerIcon = document.getElementById('headerSunMoon');
+      const weatherIcon = document.getElementById('weatherIcon');
+      const weatherText = document.getElementById('weatherText');
+      const weatherTime = document.getElementById('weatherTime');
+
+      if (isDay) {
+        headerIcon.className = 'fa-solid fa-sun';
+        headerIcon.style.color = 'var(--sun-gold)';
+        weatherIcon.style.color = 'var(--sun-gold)';
+        if (h < 10) weatherText.innerHTML = '<strong>Rodi:</strong> 26°C Mattina soleggiata';
+        else if (h < 14) weatherText.innerHTML = '<strong>Rodi:</strong> 32°C Sole pieno';
+        else if (h < 18) weatherText.innerHTML = '<strong>Rodi:</strong> 30°C Pomeriggio caldo';
+        else weatherText.innerHTML = '<strong>Rodi:</strong> 27°C Sera piacevole';
+      } else {
+        headerIcon.className = 'fa-solid fa-moon';
+        headerIcon.style.color = '#94A3B8';
+        weatherIcon.style.color = '#94A3B8';
+        weatherText.innerHTML = '<strong>Rodi:</strong> 24°C Notte serena';
+      }
+      weatherTime.textContent = 'Ora locale: ' + timeStr;
+    }
+    updateWeather();
+    setInterval(updateWeather, 60000);
+  </script>
+</body>
+</html>
